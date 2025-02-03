@@ -66,9 +66,13 @@ Rx1Motor::Rx1Motor(ros::NodeHandle& nh, ros::NodeHandle& priv_nh)
             //sts_servo_.WritePosEx(id, 1600, 200, 20);
             sts_servo_.WritePosEx(id, 2048, 200, 20);
         }
-        else if (i == 0 || i == 2)
+        else if (i == 0)
         {
             sts_servo_.WritePosEx(id, 2048, 200, 20);
+        }
+        else if (i == 2)
+        {
+            sts_servo_.WritePosEx(id, 2000, 200, 20);
         }
         else
         {

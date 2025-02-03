@@ -5,17 +5,16 @@ import time
 
 # List of ROS bag files to play in sequence
 rosbags = [
+    "/home/lingkang/rosbag/dual_arm_hand_bag.bag",
+    "/home/lingkang/rosbag/command_head.bag",
     "/home/lingkang/rosbag/right_arm_2.bag",
     "/home/lingkang/rosbag/command_head.bag",
-    "/home/lingkang/rosbag/dual_arm_1.bag",
-    "/home/lingkang/rosbag/command_torso.bag",
-    "/home/lingkang/rosbag/right_arm_2.bag",
+    "/home/lingkang/rosbag/dual_arm_hand_bag.bag",
     "/home/lingkang/rosbag/command_head.bag",
-    "/home/lingkang/rosbag/dual_arm_2.bag",
-    "/home/lingkang/rosbag/right_arm_2.bag",
+    "/home/lingkang/rosbag/dual_arm_hand_bag.bag",
     "/home/lingkang/rosbag/command_head.bag",
-    "/home/lingkang/rosbag/right_arm_1.bag",
-    "/home/lingkang/rosbag/dual_arm_3.bag"
+    "/home/lingkang/rosbag/dual_arm_hand_bag.bag",
+    "/home/lingkang/rosbag/command_head.bag",
 ]
 
 # Function to play a single ROS bag file
