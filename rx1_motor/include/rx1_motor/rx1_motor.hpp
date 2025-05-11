@@ -1,5 +1,11 @@
+// Copyright 2025 Electrified Autonomy, LLC
+
 #ifndef RX1_MOTOR__RX1_MOTOR_HPP_
 #define RX1_MOTOR__RX1_MOTOR_HPP_
+
+#include <array>
+#include <string>
+#include <vector>
 
 #include "feetech_lib/SMS_STS.hpp"
 #include "feetech_lib/SCSCL.hpp"
@@ -8,16 +14,13 @@
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/float32.hpp>
 
-#include <string>
-#include <vector>
-
 namespace rx1_motor
 {
 
 class Rx1MotorNode : public rclcpp::Node
 {
 public:
-  Rx1MotorNode(const rclcpp::NodeOptions & options);
+  explicit Rx1MotorNode(const rclcpp::NodeOptions & options);
   ~Rx1MotorNode();
 
 private:
@@ -90,14 +93,14 @@ private:
   static constexpr double TORSO_H1_ = 0.11;
   static constexpr double TORSO_H2_ = 0.11;
 
-  static constexpr double TORSO_SPEED_ = 1.0;// 500;
-  static constexpr double TORSO_ACC_ = 1.5; //10;
-  static constexpr double ARM_SPEED_ = 1.0; //700;
-  static constexpr double ARM_ACC_ = 3.0; //20;
-  static constexpr double HEAD_SPEED_ = 1.0; //500;
-  static constexpr double HEAD_ACC_ = 7.0; //50;
-  static constexpr double HAND_SPEED_ = 0; // maximum
-  static constexpr double HAND_ACC_ = 15; //100;
+  static constexpr double TORSO_SPEED_ = 1.0;  // 500;
+  static constexpr double TORSO_ACC_ = 1.5;    // 10;
+  static constexpr double ARM_SPEED_ = 1.0;    // 700;
+  static constexpr double ARM_ACC_ = 3.0;      // 20;
+  static constexpr double HEAD_SPEED_ = 1.0;   // 500;
+  static constexpr double HEAD_ACC_ = 7.0;     // 50;
+  static constexpr double HAND_SPEED_ = 0;     // maximum
+  static constexpr double HAND_ACC_ = 15;      // 100;
 
   // Based on Feetech manual, 50step/s = 0.732 RPM
   // then 1 step /s = 0.00153232 rad /s
@@ -110,6 +113,6 @@ private:
   rclcpp::Time last_spin_time_;
 };
 
-} // namespace rx1_motor
+}  // namespace rx1_motor
 
-#endif // RX1_MOTOR__RX1_MOTOR_HPP_
+#endif  // RX1_MOTOR__RX1_MOTOR_HPP_

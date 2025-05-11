@@ -1,12 +1,14 @@
+// Copyright 2025 Electrified Autonomy, LLC
+
 #ifndef RX1_MOTOR_LIB__RX1_MOTOR_LIB_HPP_
 #define RX1_MOTOR_LIB__RX1_MOTOR_LIB_HPP_
-
-#include "feetech_lib/SMS_STS.hpp"
-#include "feetech_lib/SCSCL.hpp"
 
 #include <array>
 #include <string>
 #include <vector>
+
+#include "feetech_lib/SMS_STS.hpp"
+#include "feetech_lib/SCSCL.hpp"
 
 namespace rx1_motor_lib
 {
@@ -95,8 +97,8 @@ private:
   static constexpr double TORSO_H1_ = 0.11;
   static constexpr double TORSO_H2_ = 0.11;
 
-  static constexpr double HAND_SPEED_ = 0; // maximum
-  static constexpr double HAND_ACC_ = 15; //100;
+  static constexpr double HAND_SPEED_ = 0;  // maximum
+  static constexpr double HAND_ACC_ = 15;  // 100;
 
   // Based on Feetech manual, 50step/s = 0.732 RPM
   // then 1 step /s = 0.00153232 rad /s
@@ -107,6 +109,6 @@ private:
   const double ACC_CONST_ = 6.526051999582332;
 };
 
-} // namespace rx1_motor_lib
+}  // namespace rx1_motor_lib
 
-#endif // RX1_MOTOR_LIB__RX1_MOTOR_LIB_HPP_
+#endif  // RX1_MOTOR_LIB__RX1_MOTOR_LIB_HPP_

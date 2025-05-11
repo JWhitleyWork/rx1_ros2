@@ -1,5 +1,11 @@
+// Copyright 2025 Electrified Autonomy, LLC
+
 #ifndef RX1_IK__RX1_IK_HPP_
 #define RX1_IK__RX1_IK_HPP_
+
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
 
 #include <memory>
 #include <string>
@@ -11,16 +17,13 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <tf2_ros/buffer.h>
-#include <tf2_ros/transform_broadcaster.h>
-#include <tf2_ros/transform_listener.h>
 
 #include "ik_solver_lib/base/ik_solver_base.hpp"
 
 class Rx1IkNode : public rclcpp::Node
 {
 public:
-  Rx1IkNode(const rclcpp::NodeOptions & options);
+  explicit Rx1IkNode(const rclcpp::NodeOptions & options);
 
   void initializeInteractiveMarker();
   void markerRightCallback(
@@ -84,4 +87,4 @@ private:
     const std::string & frame_id, const std::string & child_frame_id);
 };
 
-#endif // RX1_IK__RX1_IK_HPP_
+#endif  // RX1_IK__RX1_IK_HPP_

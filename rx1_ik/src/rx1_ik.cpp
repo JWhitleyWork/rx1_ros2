@@ -1,8 +1,12 @@
+// Copyright 2025 Electrified Autonomy, LLC
+
 #include "rx1_ik/rx1_ik.hpp"
+
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 #include <chrono>
 #include <cmath>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -12,20 +16,18 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <ik_solver_lib/trac_ik/trac_ik_solver.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <tf2_ros/transform_listener.h>
-#include <tf2_ros/transform_broadcaster.h>
 #include <tf2_kdl/tf2_kdl.hpp>
 
 Rx1IkNode::Rx1IkNode(const rclcpp::NodeOptions & options)
-  : Node("rx1_ik", options),
+: Node("rx1_ik", options),
   marker_server_("end_effector_marker", this),
   tf_buffer_(std::make_unique<tf2_ros::Buffer>(this->get_clock())),
   tf_listener_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_)),
   tf_br_(std::make_unique<tf2_ros::TransformBroadcaster>(*this))
 {
   // Retrieve parameters
-  double ik_timeout = declare_parameter("ik_timeout", 0.005); // Default timeout
-  double eps = declare_parameter("eps", 1e-3); // Default error
+  double ik_timeout = declare_parameter("ik_timeout", 0.005);  // Default timeout
+  double eps = declare_parameter("eps", 1e-3);  // Default error
 
   chain_start_ = declare_parameter("chain_start", "head_base_link");
   chain_r_end_ = declare_parameter("chain_r_end", "right_hand_link");
@@ -37,12 +39,14 @@ Rx1IkNode::Rx1IkNode(const rclcpp::NodeOptions & options)
   RCLCPP_INFO(this->get_logger(), "eps: %f", eps);
 
   ik_solver_r_ptr_ = std::make_shared<ik_solver_lib::TracIKSolver>();
-  ik_solver_r_ptr_->initialize(shared_from_this(), chain_start_, chain_r_end_, urdf_param_, ik_timeout, eps);
+  ik_solver_r_ptr_->initialize(shared_from_this(), chain_start_, chain_r_end_, urdf_param_,
+    ik_timeout, eps);
 
   right_last_ik_time_ = now().seconds() - tracking_timeout_;
 
   ik_solver_l_ptr_ = std::make_shared<ik_solver_lib::TracIKSolver>();
-  ik_solver_l_ptr_->initialize(shared_from_this(), chain_start_, chain_l_end_, urdf_param_, ik_timeout, eps);
+  ik_solver_l_ptr_->initialize(shared_from_this(), chain_start_, chain_l_end_, urdf_param_,
+    ik_timeout, eps);
 
   left_last_ik_time_ = now().seconds() - tracking_timeout_;
 
@@ -193,8 +197,8 @@ void Rx1IkNode::make6DofMarker(visualization_msgs::msg::InteractiveMarker & int_
 void Rx1IkNode::initializeInteractiveMarker()
 {
   // Create an interactive marker for the end effector
-  //visualization_msgs::InteractiveMarker int_marker;
-  int_marker_r_.header.frame_id = chain_start_; //"torso_link";
+  // visualization_msgs::InteractiveMarker int_marker;
+  int_marker_r_.header.frame_id = chain_start_;  // "torso_link";
   int_marker_r_.name = "right_end_effector";
   int_marker_r_.description = "Right End Effector Control";
 
@@ -206,12 +210,13 @@ void Rx1IkNode::initializeInteractiveMarker()
   // Create a 6-DOF control which allows moving and rotating along all axes
   make6DofMarker(int_marker_r_);
   make6DofMarker(int_marker_l_);
-  //make6DofMarker(int_marker_b_);
 
   // Add the interactive marker to our collection &
   // tell the server to call processFeedback() when feedback arrives for it
-  marker_server_.insert(int_marker_r_, std::bind(&Rx1IkNode::markerRightCallback, this, std::placeholders::_1));
-  marker_server_.insert(int_marker_l_, std::bind(&Rx1IkNode::markerLeftCallback, this, std::placeholders::_1));
+  marker_server_.insert(int_marker_r_,
+    std::bind(&Rx1IkNode::markerRightCallback, this, std::placeholders::_1));
+  marker_server_.insert(int_marker_l_,
+    std::bind(&Rx1IkNode::markerLeftCallback, this, std::placeholders::_1));
 
   // 'commit' changes and send to all clients
   marker_server_.applyChanges();
@@ -310,7 +315,8 @@ void Rx1IkNode::rightGripperPoseCallback(const geometry_msgs::msg::Pose::SharedP
   if (ik_solved) {
     bool success = true;
 
-    // if it's within tracking_timeout, then the angle change should be smaller than max_angle_change
+    // if it's within tracking_timeout,
+    // then the angle change should be smaller than max_angle_change
     if ((now().seconds() - right_last_ik_time_) < tracking_timeout_) {
       for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
         if (abs(right_prev_joint_state_msg_.position[i] - result_joint_positions(i)) >
@@ -355,7 +361,8 @@ void Rx1IkNode::leftGripperPoseCallback(const geometry_msgs::msg::Pose::SharedPt
   if (ik_solver_l_ptr_->solveIK(desired_pose, result_joint_positions)) {
     bool success = true;
 
-    // if it's within tracking_timeout, then the angle change should be smaller than max_angle_change
+    // if it's within tracking_timeout,
+    // then the angle change should be smaller than max_angle_change
     if ((now().seconds() - left_last_ik_time_) < tracking_timeout_) {
       for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
         if (abs(left_prev_joint_state_msg_.position[i] - result_joint_positions(i)) >
@@ -416,14 +423,12 @@ void Rx1IkNode::update()
     int_marker_r_.pose = pose.pose;
     marker_server_.insert(int_marker_r_);
     marker_server_.applyChanges();
-    //RCLCPP_INFO(this->get_logger(), "Marker right pose updated");
   }
 
   if(getLinkPose(chain_start_, chain_l_end_, pose)) {
     int_marker_l_.pose = pose.pose;
     marker_server_.insert(int_marker_l_);
     marker_server_.applyChanges();
-    //RCLCPP_INFO(this->get_logger(), "Marker left pose updated");
   }
 }
 
@@ -457,7 +462,8 @@ bool Rx1IkNode::getPoseInNewFrame(
 {
   try {
     geometry_msgs::msg::TransformStamped transformStamped;
-    transformStamped = tf_buffer_->lookupTransform(old_pose.header.frame_id, new_frame, tf2::TimePointZero,
+    transformStamped = tf_buffer_->lookupTransform(old_pose.header.frame_id, new_frame,
+      tf2::TimePointZero,
       std::chrono::seconds(1));
 
     tf2::doTransform(old_pose, new_pose, transformStamped);

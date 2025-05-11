@@ -5,10 +5,10 @@
   <version>0.0.1</version>
   <description>RX1 motor driver package</description>
 
-  <author email="lethiic@gmail.com">lethic</author>
-  <author email="josh@electrifiedautonomy.com">Josh Whitley</author>
   <maintainer email="lethiic@gmail.com">lethic</maintainer>
   <license>MIT</license>
+  <author email="lethiic@gmail.com">lethic</author>
+  <author email="josh@electrifiedautonomy.com">Josh Whitley</author>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
 

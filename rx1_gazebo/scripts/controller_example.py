@@ -4,16 +4,21 @@ import rclpy
 from rclpy.node import Node
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
+
 class ArmTorsoHeadController(Node):
     def __init__(self):
         # Initialize the ROS node
         super().__init__('move_arms_torso_head_to_zero')
 
         # Publishers for the right arm, left arm, torso, and head controllers
-        self.right_arm_pub = self.create_publisher('/right_arm_position_controller/command', JointTrajectory, 10)
-        self.left_arm_pub = self.create_publisher('/left_arm_position_controller/command', JointTrajectory, 10)
-        self.torso_pub = self.create_publisher('/torso_position_controller/command', JointTrajectory, 10)
-        self.head_pub = self.create_publisher('/head_position_controller/command', JointTrajectory, 10)
+        self.right_arm_pub = self.create_publisher(
+            '/right_arm_position_controller/command', JointTrajectory, 10)
+        self.left_arm_pub = self.create_publisher(
+            '/left_arm_position_controller/command', JointTrajectory, 10)
+        self.torso_pub = self.create_publisher(
+            '/torso_position_controller/command', JointTrajectory, 10)
+        self.head_pub = self.create_publisher(
+            '/head_position_controller/command', JointTrajectory, 10)
 
         # Define joint names for the right arm
         self.right_arm_joints = [
@@ -55,7 +60,7 @@ class ArmTorsoHeadController(Node):
         self.main_loop_timer = self.create_timer(0.2, self.main_loop)
 
     def create_trajectory(self, joint_names, pos):
-        """Creates a JointTrajectory message with all joints set to 0 position."""
+        """Create a JointTrajectory message with all joints set to 0 position."""
         traj = JointTrajectory()
         traj.joint_names = joint_names
 
@@ -68,35 +73,36 @@ class ArmTorsoHeadController(Node):
         return traj
 
     def move_right_arm_to_zero(self):
-        """Publishes a trajectory to move the right arm joints to position 0."""
+        """Publish a trajectory to move the right arm joints to position 0."""
         right_arm_traj = self.create_trajectory(self.right_arm_joints, 0)
-        self.get_logger().info("Sending trajectory to move right arm joints to position 0.")
+        self.get_logger().info('Sending trajectory to move right arm joints to position 0.')
         self.right_arm_pub.publish(right_arm_traj)
 
     def move_left_arm_to_zero(self):
-        """Publishes a trajectory to move the left arm joints to position 0."""
+        """Publish a trajectory to move the left arm joints to position 0."""
         left_arm_traj = self.create_trajectory(self.left_arm_joints, 0)
-        self.get_logger().info("Sending trajectory to move left arm joints to position 0.")
+        self.get_logger().info('Sending trajectory to move left arm joints to position 0.')
         self.left_arm_pub.publish(left_arm_traj)
 
     def move_torso_to_zero(self):
-        """Publishes a trajectory to move the torso joints to position 0."""
+        """Publish a trajectory to move the torso joints to position 0."""
         torso_traj = self.create_trajectory(self.torso_joints, 0)
-        self.get_logger().info("Sending trajectory to move torso joints to position 0.")
+        self.get_logger().info('Sending trajectory to move torso joints to position 0.')
         self.torso_pub.publish(torso_traj)
 
     def move_head_to_zero(self):
-        """Publishes a trajectory to move the head joints to position 0."""
+        """Publish a trajectory to move the head joints to position 0."""
         head_traj = self.create_trajectory(self.head_joints, 0)
-        self.get_logger().info("Sending trajectory to move head joints to position 0.")
+        self.get_logger().info('Sending trajectory to move head joints to position 0.')
         self.head_pub.publish(head_traj)
 
     def move_all_to_zero(self):
-        """Moves both arms, the torso, and the head to zero position."""
+        """Move both arms, the torso, and the head to zero position."""
         self.move_right_arm_to_zero()
         self.move_left_arm_to_zero()
         self.move_torso_to_zero()
         self.move_head_to_zero()
+
 
 if __name__ == '__main__':
     rclpy.init()
@@ -112,4 +118,3 @@ if __name__ == '__main__':
 
     # Shutdown the ROS node
     rclpy.shutdown()
-

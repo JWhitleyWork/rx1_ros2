@@ -5,19 +5,27 @@
 
 import os
 import sys
-import xacro
+
 import collada
 from stl import mesh
-from urdf_parser_py.urdf import URDF, Mesh, Box, Sphere, Cylinder, Inertial, Inertia
-from xml.etree.ElementTree import Element, tostring
+from urdf_parser_py.urdf import Box, Cylinder, Inertia, Inertial, Mesh, Sphere, URDF
+import xacro
+
 
 def getSTLDimensions(model):
-    return model.x.max() - model.x.min(), model.y.max() - model.y.min(), model.z.max() - model.z.min()
+    return (
+        model.x.max() - model.x.min(),
+        model.y.max() - model.y.min(),
+        model.z.max() - model.z.min(),
+    )
+
 
 def getColladaDimensions(model):
-    minx = miny = minz = float("inf")
-    maxx = maxy = maxz = float("-inf")
-    for tr_vertex in model.geometries[0].primitives[0].vertex[model.geometries[0].primitives[0].vertex_index]:
+    minx = miny = minz = float('inf')
+    maxx = maxy = maxz = float('-inf')
+    for tr_vertex in model.geometries[0].primitives[0].vertex[
+        model.geometries[0].primitives[0].vertex_index
+    ]:
         for v in tr_vertex:
             maxx = maxx if v[0] <= maxx else v[0]
             maxy = maxy if v[1] <= maxy else v[1]
@@ -27,43 +35,45 @@ def getColladaDimensions(model):
             minz = minz if v[2] >= minz else v[2]
     return maxx - minx, maxy - miny, maxz - minz
 
+
 def getInertia(geometry, m, s):
     xx = yy = zz = 0.0
-    if type(geometry) == Mesh:
-        ROS_VERSION = os.getenv("ROS_VERSION")
+    if geometry is Mesh:
+        ROS_VERSION = os.getenv('ROS_VERSION')
         get_pkg_fn = None
         if not ROS_VERSION:
-            ROS_VERSION = "2"
-        if ROS_VERSION == "1":
+            ROS_VERSION = '2'
+        if ROS_VERSION == '1':
             import rospkg
             get_pkg_fn = rospkg.RosPack().get_path
         else:
             import ament_index_python
             get_pkg_fn = ament_index_python.get_package_share_path
-        pkg_tag = "package://"
-        file_tag = "file://"
-        mesh_file = ""
+        pkg_tag = 'package://'
+        file_tag = 'file://'
+        mesh_file = ''
         if geometry.filename.startswith(pkg_tag):
             package, mesh_file = geometry.filename.split(pkg_tag)[1].split(os.sep, 1)
             mesh_file = str(get_pkg_fn(package))+os.sep+mesh_file
         elif geometry.filename.startswith(file_tag):
-            mesh_file = geometry.filename.replace(file_tag, "")
-        if mesh_file.endswith(".stl"):
+            mesh_file = geometry.filename.replace(file_tag, '')
+        if mesh_file.endswith('.stl'):
             model = mesh.Mesh.from_file(mesh_file)
             x, y, z = getSTLDimensions(model)
         else:
             model = collada.Collada(mesh_file)
             x, y, z = getColladaDimensions(model)
         xx, yy, zz = getBoxInertia(x, y, z, m, s)
-    elif type(geometry) == Box:
+    elif geometry is Box:
         x, y, z = geometry.size
         xx, yy, zz = getBoxInertia(x, y, z, m, s)
-    elif type(geometry) == Sphere:
+    elif geometry is Sphere:
         xx, yy, zz = getSphereInertia(geometry.radius, m)
-    elif type(geometry) == Cylinder:
+    elif geometry is Cylinder:
         xx, yy, zz = getCylinderInertia(geometry.radius, geometry.length, m)
 
     return xx, yy, zz
+
 
 def getBoxInertia(x, y, z, m, s):
     x *= s[0]
@@ -74,22 +84,25 @@ def getBoxInertia(x, y, z, m, s):
     zz = 1./12 * m * (x**2 + y**2)
     return xx, yy, zz
 
+
 def getSphereInertia(r, m):
     i = 2./5 * m * r**2
     return i, i, i
+
 
 def getCylinderInertia(r, h, m):
     xx = yy = 1./12 * m * (3 * r**2 + h**2)
     zz = 1./2 * m * r**2
     return xx, yy, zz
 
+
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print("Usage: script.py <input_urdf_file>")
+        print('Usage: script.py <input_urdf_file>')
         sys.exit(1)
 
     input_urdf_file = sys.argv[1]
-    output_urdf_file = "output_with_inertia.urdf"
+    output_urdf_file = 'output_with_inertia.urdf'
 
     # Parse the URDF file
     robot = URDF.from_xml_string(xacro.process_file(input_urdf_file).toprettyxml())
@@ -126,5 +139,4 @@ if __name__ == '__main__':
     with open(output_urdf_file, 'w') as f:
         f.write(robot.to_xml_string())
 
-    print(f"New URDF with calculated inertia written to: {output_urdf_file}")
-
+    print(f'New URDF with calculated inertia written to: {output_urdf_file}')

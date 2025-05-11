@@ -1,4 +1,4 @@
-#include "rx1_motor_lib/rx1_motor_lib.hpp"
+// Copyright 2025 Electrified Autonomy, LLC
 
 #include <array>
 #include <cassert>
@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include "rx1_motor_lib/rx1_motor_lib.hpp"
 
 namespace rx1_motor_lib
 {
@@ -26,22 +28,22 @@ void Rx1MotorLib::initializeServos(const std::string & servo_port)
     throw std::runtime_error("Failed to initialize SCS servo");
   }
 
-  for(int i = 0; i < right_arm_servo_ids_.size(); i++) {
+  for(size_t i = 0; i < right_arm_servo_ids_.size(); i++) {
     uint8_t id = right_arm_servo_ids_[i];
     sts_servo_.WritePosEx(id, 2048, 200, 20);
   }
 
-  for(int i = 0; i < left_arm_servo_ids_.size(); i++) {
+  for(size_t i = 0; i < left_arm_servo_ids_.size(); i++) {
     uint8_t id = left_arm_servo_ids_[i];
     sts_servo_.WritePosEx(id, 2048, 200, 20);
   }
 
-  for(int i = 0; i < torso_servo_ids_.size(); i++) {
+  for(size_t i = 0; i < torso_servo_ids_.size(); i++) {
     uint8_t id = torso_servo_ids_[i];
     sts_servo_.WritePosEx(id, 2048, 200, 20);
   }
 
-  for(int i = 0; i < head_servo_ids_.size(); i++) {
+  for(size_t i = 0; i < head_servo_ids_.size(); i++) {
     uint8_t id = head_servo_ids_[i];
 
     if (i == 1) {
@@ -64,19 +66,19 @@ void Rx1MotorLib::headMotorCommand(
   uint16_t speed;
   uint8_t acc;
 
-  for (int i = 0; i < joint_positions.size(); i++) {
-    id = static_cast<unsigned char>(head_servo_ids_[i]);
-    speed = static_cast<unsigned short>(joint_speeds[i] * SPEED_CONST_);
-    acc = static_cast<unsigned char>(joint_accs[i] * ACC_CONST_);
+  for (size_t i = 0; i < joint_positions.size(); i++) {
+    id = static_cast<uint8_t>(head_servo_ids_[i]);
+    speed = static_cast<uint16_t>(joint_speeds[i] * SPEED_CONST_);
+    acc = static_cast<uint8_t>(joint_accs[i] * ACC_CONST_);
 
-    if (i == 0 || i == 1 || i == 2) { //neck
-      pos = static_cast<short>(joint_positions[i] / 3.14 * 2048 * head_servo_dirs_[i] *
+    if (i == 0 || i == 1 || i == 2) {  // neck
+      pos = static_cast<int16_t>(joint_positions[i] / 3.14 * 2048 * head_servo_dirs_[i] *
         head_servo_gears_[i] + 2048);
       sts_servo_.WritePosEx(id, pos, speed, acc);
-    } else { // ear
-      pos = static_cast<short>(joint_positions[i] / 3.14 * 512 * head_servo_dirs_[i] *
+    } else {  // ear
+      pos = static_cast<int16_t>(joint_positions[i] / 3.14 * 512 * head_servo_dirs_[i] *
         head_servo_gears_[i] + 512);
-      scs_servo_.WritePos(id, pos, 0, 0); // id, pos, time, speed
+      scs_servo_.WritePos(id, pos, 0, 0);  // id, pos, time, speed
     }
   }
 }
@@ -120,12 +122,13 @@ void Rx1MotorLib::leftGripperMotorCommand(const double grip_ratio)
   int length = left_hand_servo_ids_.size();
   uint8_t id;
   int16_t pos;
-  uint16_t speed = static_cast<unsigned short>(HAND_SPEED_ * SPEED_CONST_);
-  uint8_t acc = static_cast<unsigned char>(HAND_ACC_ * ACC_CONST_);
+  uint16_t speed = static_cast<uint16_t>(HAND_SPEED_ * SPEED_CONST_);
+  uint8_t acc = static_cast<uint8_t>(HAND_ACC_ * ACC_CONST_);
 
   for (int i = 0; i < length; i++) {
-    id = static_cast<unsigned char>(left_hand_servo_ids_[i]);
-    pos = static_cast<short>(left_hand_servo_default_[i] + grip_ratio * left_hand_servo_range_[i]);
+    id = static_cast<uint8_t>(left_hand_servo_ids_[i]);
+    pos = static_cast<int16_t>(left_hand_servo_default_[i] + grip_ratio *
+      left_hand_servo_range_[i]);
     if (i == 1 || i == 2) {   // thumb and index fingers are sts servo, others are scs servos
       sts_servo_.WritePosEx(id, pos, speed, acc);
     } else if (i == 3) {
@@ -146,12 +149,12 @@ void Rx1MotorLib::rightGripperMotorCommand(const double grip_ratio)
   int length = right_hand_servo_ids_.size();
   uint8_t id;
   int16_t pos;
-  uint16_t speed = static_cast<unsigned short>(HAND_SPEED_ * SPEED_CONST_);
-  uint8_t acc = static_cast<unsigned char>(HAND_ACC_ * ACC_CONST_);
+  uint16_t speed = static_cast<uint16_t>(HAND_SPEED_ * SPEED_CONST_);
+  uint8_t acc = static_cast<uint8_t>(HAND_ACC_ * ACC_CONST_);
 
   for (int i = 0; i < length; i++) {
-    id = static_cast<unsigned char>(right_hand_servo_ids_[i]);
-    pos = static_cast<short>(right_hand_servo_default_[i] + grip_ratio *
+    id = static_cast<uint8_t>(right_hand_servo_ids_[i]);
+    pos = static_cast<int16_t>(right_hand_servo_default_[i] + grip_ratio *
       right_hand_servo_range_[i]);
 
     if (i == 1 || i == 2) {   // thumb and index fingers are sts servo, others are scs servos
@@ -217,17 +220,17 @@ void Rx1MotorLib::motorCommand(
   const std::vector<double> & joint_accs)
 {
   int length = joint_ids.size();
-  std::vector<uint8_t> ids(length);
   std::vector<int16_t> pos(length);
   std::vector<uint16_t> speeds(length);
   std::vector<uint8_t> accs(length);
+  std::vector<uint8_t> ids(length);
 
   for (int i = 0; i < length; i++) {
-    ids[i] = static_cast<unsigned char>(joint_ids[i]);
-    speeds[i] = static_cast<unsigned short>(joint_speeds[i] * joint_gears[i] * SPEED_CONST_);
-    accs[i] = static_cast<unsigned char>(joint_accs[i] * joint_gears[i] * ACC_CONST_);
-    pos[i] = static_cast<short>(joint_angles[i] / 3.14 * 2048 * joint_dirs[i] * joint_gears[i] +
+    accs[i] = static_cast<uint8_t>(joint_accs[i] * joint_gears[i] * ACC_CONST_);
+    ids[i] = static_cast<uint8_t>(joint_ids[i]);
+    pos[i] = static_cast<int16_t>(joint_angles[i] / 3.14 * 2048 * joint_dirs[i] * joint_gears[i] +
       2048);
+    speeds[i] = static_cast<uint16_t>(joint_speeds[i] * joint_gears[i] * SPEED_CONST_);
 
     // temporary change: make forearm faster
     if (i >= 3) {
@@ -239,4 +242,4 @@ void Rx1MotorLib::motorCommand(
   sts_servo_.SyncWritePosEx(ids.data(), length, pos.data(), speeds.data(), accs.data());
 }
 
-} // namespace rx1_motor_lib
+}  // namespace rx1_motor_lib

@@ -1,9 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+import tkinter as tk
 
 import rclpy
 from rclpy.node import Node
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-import tkinter as tk
+
 
 class ArmTorsoHeadController(Node):
     def __init__(self):
@@ -11,10 +13,14 @@ class ArmTorsoHeadController(Node):
         super().__init__('move_arms_torso_head_with_gui')
 
         # Publishers for the right arm, left arm, torso, and head controllers
-        self.right_arm_pub = self.create_publisher('/right_arm_position_controller/command', JointTrajectory, 10)
-        self.left_arm_pub = self.create_publisher('/left_arm_position_controller/command', JointTrajectory, 10)
-        self.torso_pub = self.create_publisher('/torso_position_controller/command', JointTrajectory, 10)
-        self.head_pub = self.create_publisher('/head_position_controller/command', JointTrajectory, 10)
+        self.right_arm_pub = self.create_publisher(
+            '/right_arm_position_controller/command', JointTrajectory, 10)
+        self.left_arm_pub = self.create_publisher(
+            '/left_arm_position_controller/command', JointTrajectory, 10)
+        self.torso_pub = self.create_publisher(
+            '/torso_position_controller/command', JointTrajectory, 10)
+        self.head_pub = self.create_publisher(
+            '/head_position_controller/command', JointTrajectory, 10)
 
         # Joint names for the right arm, left arm, torso, and head
         self.right_arm_joints = [
@@ -51,7 +57,12 @@ class ArmTorsoHeadController(Node):
 
         # Variables to hold joint positions from sliders
         self.joint_positions = {
-            joint: 0.0 for joint in self.right_arm_joints + self.left_arm_joints + self.torso_joints + self.head_joints
+            joint: 0.0 for joint in (
+                self.right_arm_joints +
+                self.left_arm_joints +
+                self.torso_joints +
+                self.head_joints
+            )
         }
 
         # Initialize the Tkinter GUI
@@ -60,20 +71,27 @@ class ArmTorsoHeadController(Node):
     def init_gui(self):
         """Initialize the Tkinter GUI with sliders for each joint."""
         self.root = tk.Tk()
-        self.root.title("Joint Angle Controller")
+        self.root.title('Joint Angle Controller')
 
         row = 0
         # Create sliders for all joints
         for joint_name in self.joint_positions:
             label = tk.Label(self.root, text=joint_name)
             label.grid(row=row, column=0)
-            slider = tk.Scale(self.root, from_=-3.14, to=3.14, resolution=0.01, orient=tk.HORIZONTAL, length=300,
-                              command=lambda val, j=joint_name: self.update_joint_position(j, val))
+            slider = tk.Scale(
+                self.root,
+                from_=-3.14,
+                to=3.14,
+                resolution=0.01,
+                orient=tk.HORIZONTAL,
+                length=300,
+                command=lambda val, j=joint_name: self.update_joint_position(j, val))
             slider.grid(row=row, column=1)
             row += 1
 
         # Create a button to send the commands
-        send_button = tk.Button(self.root, text="Send Joint Commands", command=self.send_joint_commands)
+        send_button = tk.Button(
+            self.root, text='Send Joint Commands', command=self.send_joint_commands)
         send_button.grid(row=row, column=0, columnspan=2)
 
         # Start the Tkinter main loop
@@ -84,7 +102,7 @@ class ArmTorsoHeadController(Node):
         self.joint_positions[joint_name] = float(value)
 
     def create_trajectory(self, joint_names):
-        """Creates a JointTrajectory message based on the slider values."""
+        """Create a JointTrajectory message based on the slider values."""
         traj = JointTrajectory()
         traj.joint_names = joint_names
 
@@ -113,7 +131,8 @@ class ArmTorsoHeadController(Node):
         head_traj = self.create_trajectory(self.head_joints)
         self.head_pub.publish(head_traj)
 
-        self.get_logger().info("Joint commands sent based on GUI sliders.")
+        self.get_logger().info('Joint commands sent based on GUI sliders.')
+
 
 if __name__ == '__main__':
     rclpy.init()
@@ -122,4 +141,3 @@ if __name__ == '__main__':
     rclpy.spin(controller)
     controller.destroy_node()
     rclpy.shutdown()
-

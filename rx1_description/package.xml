@@ -4,10 +4,10 @@
   <name>rx1_description</name>
   <version>1.2.5</version>
   <description>3D models of the rx1 for simulation and visualization</description>
+  <maintainer email="lethiic@gmail.com">lethic</maintainer>
   <license>MIT</license>
   <author email="lethiic@gmail.com">lethic</author>
   <author email="josh@electrifiedautonomy.com">Josh Whitley</author>
-  <maintainer email="lethiic@gmail.com">lethic</maintainer>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
