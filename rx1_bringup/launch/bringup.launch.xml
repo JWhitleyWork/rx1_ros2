@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <include file="$(find-pkg-share rx1_motor)/launch/rx1_motor.launch.xml" />
+  <include file="$(find-pkg-share rx1_description)/launch/urdf.launch.xml"/>
+  <include file="$(find-pkg-share rx1_bringup)/launch/includes/gemini2.launch.xml"/>
+</launch>

@@ -1,23 +1,27 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>rx1_motor_lib</name>
   <version>0.0.1</version>
   <description>RX1 motor driver package</description>
 
+  <author email="lethiic@gmail.com">lethic</author>
+  <author email="josh@electrifiedautonomy.com">Josh Whitley</author>
   <maintainer email="lethiic@gmail.com">lethic</maintainer>
-
   <license>MIT</license>
 
-  <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>rospy</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_export_depend>roscpp</build_export_depend>
-  <build_export_depend>rospy</build_export_depend>
-  <build_export_depend>std_msgs</build_export_depend>
-  <exec_depend>roscpp</exec_depend>
-  <exec_depend>rospy</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
-  <depend>feetech_lib</depend>
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>feetech_lib</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

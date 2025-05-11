@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="paused" default="false"/>
+    <arg name="use_sim_time" default="true"/>
+    <arg name="gui" default="true"/>
+    <arg name="debug" default="false" />
+    <arg name="verbose" default="true" />
+
+    <arg name="robot_x" default="0" />
+    <arg name="robot_y" default="0" />
+    <arg name="robot_z" default="0.01" />
+
+    <!-- spawn the robot -->
+    <include file="$(find-pkg-share ros_gz_sim)/launch/ros_gz_spawn_model.launch.py">
+        <arg name="world" value="empty" />
+        <arg name="file" value="$(find-pkg-share rx1_description)/urdf/rx1.gazebo.urdf" />
+        <arg name="entity_name" value="rx1" />
+        <arg name="x" value="$(var robot_x)" />
+        <arg name="y" value="$(var robot_y)" />
+        <arg name="z" value="$(var robot_z)" />
+    </include>
+
+    <!-- Load joint controller configurations from YAML file to parameter server -->
+    <rosparam file="$(find-pkg-share rx1_gazebo)/config/rx1_control.yaml" command="load" />
+  
+    <!-- load the controllers -->
+    <node name="controller_spawner" pkg="controller_manager" exec="spawner" respawn="false"
+      output="screen" args="joint_state_controller right_arm_position_controller left_arm_position_controller torso_position_controller head_position_controller" />
+  
+    <!-- convert joint states to TF transforms for rviz, etc -->
+    <node name="state_publisher" pkg="robot_state_publisher" exec="robot_state_publisher" respawn="false" output="screen" />
+
+    <node pkg="tf" exec="static_transform_publisher" name="world_broadcaster" args = "0 0 0 0 0 0 world base_link 10" />
+    <node pkg="tf" exec="static_transform_publisher" name="map_broadcaster" args = "0 0 0 0 0 0 world map 10" />
+
+</launch>

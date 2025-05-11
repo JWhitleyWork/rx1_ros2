@@ -1,42 +1,23 @@
-################################################################################
-# Set minimum required version of cmake, project name and compile options
-################################################################################
-cmake_Minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(rx1_motor_lib)
 
-################################################################################
-# Find catkin packages and libraries for catkin and system dependencies
-################################################################################
-find_package(catkin REQUIRED COMPONENTS
-  feetech_lib
-  roscpp
-  rospy
-  std_msgs
-)
+# Default to C++17
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
 
-################################################################################
-# Declare catkin specific configuration to be passed to dependent projects
-################################################################################
-catkin_package(
- INCLUDE_DIRS include
- LIBRARIES rx1_motor_lib
- CATKIN_DEPENDS feetech_lib roscpp rospy std_msgs
-)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
-################################################################################
-# Build
-################################################################################
-include_directories(
-  ${PROJECT_SOURCE_DIR}/include/rx1_motor_lib
-  ${catkin_INCLUDE_DIRS}
-)
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
 
-file(GLOB hdrs include/rx1_motor_lib/*.hpp)
-file(GLOB srs src/*.cpp)
+ament_auto_add_library(${PROJECT_NAME} SHARED src/rx1_motor.cpp)
 
-add_library(rx1_motor_lib ${hdrs} ${srs})
-add_dependencies(rx1_motor_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
-target_link_libraries(rx1_motor_lib
-  ${catkin_LIBRARIES}
-)
+ament_auto_package()

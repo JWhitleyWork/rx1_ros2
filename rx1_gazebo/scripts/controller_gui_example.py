@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 
-import rospy
+import rclpy
+from rclpy.node import Node
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 import tkinter as tk
 
-class ArmTorsoHeadController:
+class ArmTorsoHeadController(Node):
     def __init__(self):
         # Initialize the ROS node
-        rospy.init_node('move_arms_torso_head_with_gui', anonymous=True)
+        super().__init__('move_arms_torso_head_with_gui')
 
         # Publishers for the right arm, left arm, torso, and head controllers
-        self.right_arm_pub = rospy.Publisher('/right_arm_position_controller/command', JointTrajectory, queue_size=10)
-        self.left_arm_pub = rospy.Publisher('/left_arm_position_controller/command', JointTrajectory, queue_size=10)
-        self.torso_pub = rospy.Publisher('/torso_position_controller/command', JointTrajectory, queue_size=10)
-        self.head_pub = rospy.Publisher('/head_position_controller/command', JointTrajectory, queue_size=10)
+        self.right_arm_pub = self.create_publisher('/right_arm_position_controller/command', JointTrajectory, 10)
+        self.left_arm_pub = self.create_publisher('/left_arm_position_controller/command', JointTrajectory, 10)
+        self.torso_pub = self.create_publisher('/torso_position_controller/command', JointTrajectory, 10)
+        self.head_pub = self.create_publisher('/head_position_controller/command', JointTrajectory, 10)
 
         # Joint names for the right arm, left arm, torso, and head
         self.right_arm_joints = [
@@ -89,7 +90,7 @@ class ArmTorsoHeadController:
 
         point = JointTrajectoryPoint()
         point.positions = [self.joint_positions[joint] for joint in joint_names]
-        point.time_from_start = rospy.Duration(1.0)  # Set the movement duration
+        point.time_from_start = rclpy.Duration(1.0)  # Set the movement duration
 
         traj.points.append(point)
         return traj
@@ -112,12 +113,13 @@ class ArmTorsoHeadController:
         head_traj = self.create_trajectory(self.head_joints)
         self.head_pub.publish(head_traj)
 
-        rospy.loginfo("Joint commands sent based on GUI sliders.")
+        self.get_logger().info("Joint commands sent based on GUI sliders.")
 
 if __name__ == '__main__':
-    try:
-        # Initialize the controller
-        controller = ArmTorsoHeadController()
-    except rospy.ROSInterruptException:
-        pass
+    rclpy.init()
+    # Initialize the controller
+    controller = ArmTorsoHeadController()
+    rclpy.spin(controller)
+    controller.destroy_node()
+    rclpy.shutdown()
 

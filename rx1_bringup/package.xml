@@ -1,19 +1,29 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>rx1_bringup</name>
   <version>1.2.5</version>
-  <description>
-    roslaunch scripts for starting the rx1 robot
-  </description>
+  <description>ROS2 launch scripts for starting the rx1 robot</description>
   <license>MIT</license>
   <author email="lethiic@gmail.com">lethic</author>
+  <author email="josh@electrifiedautonomy.com">Josh Whitley</author>
   <maintainer email="lethiic@gmail.com">lethic</maintainer>
-  <buildtool_depend>catkin</buildtool_depend>
-  <depend>roscpp</depend>
+
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+
+  <depend>rclcpp</depend>
   <depend>std_msgs</depend>
   <depend>diagnostic_msgs</depend>
   <depend>sensor_msgs</depend>
+
   <exec_depend>rx1_description</exec_depend>
   <exec_depend>joint_state_publisher</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

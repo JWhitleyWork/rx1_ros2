@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="model" default="$(find-pkg-share rx1_description)/urdf/rx1.urdf"/>
+  <arg name="gui" default="true" />
+  <arg name="rvizconfig" default="$(find-pkg-share rx1_description)/rviz/urdf.rviz" />
+
+  <param name="robot_description" command="$(find-pkg-share xacro)/xacro --inorder $(var model)" />
+  <param name="use_gui" value="$(var gui)"/>
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" exec="robot_state_publisher">
+    <remap from="/joint_states" to="/command_joint_states"/>
+  </node>  
+
+  <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" exec="joint_state_publisher_gui" >
+    <remap from="/joint_states" to="/command_joint_states"/>
+  </node>
+
+  <node name="rviz2" pkg="rviz2" exec="rviz2" args="-d $(var rvizconfig)" required="true" />
+</launch>
+
