@@ -1,5 +1,6 @@
 #include "rx1_ik/rx1_ik.hpp"
 
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -9,14 +10,15 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <ik_solver_lib/trac_ik/trac_ik_solver.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <tf2_ros/transform_listener.hpp>
-#include <tf2_ros/transform_broadcaster.hpp>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_broadcaster.h>
 #include <tf2_kdl/tf2_kdl.hpp>
 
-Rx1IkNode::Rx1Ik(const rclcpp::NodeOptions & options)
+Rx1IkNode::Rx1IkNode(const rclcpp::NodeOptions & options)
   : Node("rx1_ik", options),
-  marker_server_("end_effector_marker"),
+  marker_server_("end_effector_marker", this),
   tf_buffer_(std::make_unique<tf2_ros::Buffer>(this->get_clock())),
   tf_listener_(std::make_unique<tf2_ros::TransformListener>(*tf_buffer_)),
   tf_br_(std::make_unique<tf2_ros::TransformBroadcaster>(*this))
@@ -34,31 +36,17 @@ Rx1IkNode::Rx1Ik(const rclcpp::NodeOptions & options)
 
   RCLCPP_INFO(this->get_logger(), "eps: %f", eps);
 
-  // Load the IK solver plugin
-  try {
-    // Create IK solver instance
-    ik_loader_r_ptr_ =
-      std::make_unique<pluginlib::ClassLoader<ik_solver_plugin::IKSolverBase>>("ik_solver_lib",
-      "ik_solver_plugin::IKSolverBase");
-    ik_solver_r_ptr_ = ik_loader_r_ptr_->createInstance("ik_solver_plugin::TracIKSolver");
-    ik_solver_r_ptr_->initialize(chain_start_, chain_r_end_, urdf_param_, ik_timeout, eps);
+  ik_solver_r_ptr_ = std::make_shared<ik_solver_lib::TracIKSolver>();
+  ik_solver_r_ptr_->initialize(shared_from_this(), chain_start_, chain_r_end_, urdf_param_, ik_timeout, eps);
 
-    right_last_ik_time_ = now().seconds() - tracking_timeout_;
+  right_last_ik_time_ = now().seconds() - tracking_timeout_;
 
-    ik_loader_l_ptr_ =
-      std::make_unique<pluginlib::ClassLoader<ik_solver_plugin::IKSolverBase>>("ik_solver_lib",
-      "ik_solver_plugin::IKSolverBase");
-    ik_solver_l_ptr_ = ik_loader_l_ptr_->createInstance("ik_solver_plugin::TracIKSolver");
-    ik_solver_l_ptr_->initialize(chain_start_, chain_l_end_, urdf_param_, ik_timeout, eps);
+  ik_solver_l_ptr_ = std::make_shared<ik_solver_lib::TracIKSolver>();
+  ik_solver_l_ptr_->initialize(shared_from_this(), chain_start_, chain_l_end_, urdf_param_, ik_timeout, eps);
 
-    left_last_ik_time_ = now().seconds() - tracking_timeout_;
+  left_last_ik_time_ = now().seconds() - tracking_timeout_;
 
-    RCLCPP_INFO(this->get_logger(), "TracIKSolver plugin loaded and initialized successfully.");
-  } catch (const pluginlib::PluginlibException & ex) {
-    RCLCPP_ERROR(this->get_logger(), "Failed to create the TracIKSolver plugin. Error: %s",
-      ex.what());
-    return;
-  }
+  RCLCPP_INFO(this->get_logger(), "TracIKSolver plugin loaded and initialized successfully.");
 
   // Publisher for joint states
   left_joint_state_pub_ =
@@ -222,15 +210,15 @@ void Rx1IkNode::initializeInteractiveMarker()
 
   // Add the interactive marker to our collection &
   // tell the server to call processFeedback() when feedback arrives for it
-  marker_server_.insert(int_marker_r_, std::bind(&Rx1IkNode::markerRightCallback, this, _1));
-  marker_server_.insert(int_marker_l_, std::bind(&Rx1IkNode::markerLeftCallback, this, _1));
+  marker_server_.insert(int_marker_r_, std::bind(&Rx1IkNode::markerRightCallback, this, std::placeholders::_1));
+  marker_server_.insert(int_marker_l_, std::bind(&Rx1IkNode::markerLeftCallback, this, std::placeholders::_1));
 
   // 'commit' changes and send to all clients
   marker_server_.applyChanges();
 }
 
 void Rx1IkNode::markerRightCallback(
-  const visualization_msgs::msg::InteractiveMarkerFeedback::SharedPtr feedback)
+  visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr feedback)
 {
   if (feedback->event_type == visualization_msgs::msg::InteractiveMarkerFeedback::POSE_UPDATE) {
     // Convert the marker pose to a KDL::Frame
@@ -242,7 +230,7 @@ void Rx1IkNode::markerRightCallback(
     if (ik_solver_r_ptr_->solveIK(desired_pose, result_joint_positions)) {
       bool success = true;
 
-      for (int i = 0; i < result_joint_positions.rows(); ++i) {
+      for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
         if (abs(right_prev_joint_state_msg_.position[i] - result_joint_positions(i)) >
           max_angle_change_)
         {
@@ -251,7 +239,7 @@ void Rx1IkNode::markerRightCallback(
       }
 
       if (success) {
-        for (int i = 0; i < result_joint_positions.rows(); ++i) {
+        for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
           // simple smoothing
           right_prev_joint_state_msg_.position[i] = right_prev_joint_state_msg_.position[i] * 0.9 +
             result_joint_positions(i) * 0.1;
@@ -269,7 +257,7 @@ void Rx1IkNode::markerRightCallback(
 }
 
 void Rx1IkNode::markerLeftCallback(
-  const visualization_msgs::msg::InteractiveMarkerFeedback::SharedPtr feedback)
+  visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr feedback)
 {
   if (feedback->event_type == visualization_msgs::msg::InteractiveMarkerFeedback::POSE_UPDATE) {
     // Convert the marker pose to a KDL::Frame
@@ -280,7 +268,7 @@ void Rx1IkNode::markerLeftCallback(
     KDL::JntArray result_joint_positions;
     if (ik_solver_l_ptr_->solveIK(desired_pose, result_joint_positions)) {
       bool success = true;
-      for (int i = 0; i < result_joint_positions.rows(); ++i) {
+      for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
         if (abs(left_prev_joint_state_msg_.position[i] - result_joint_positions(i)) >
           max_angle_change_)
         {
@@ -289,7 +277,7 @@ void Rx1IkNode::markerLeftCallback(
       }
 
       if (success) {
-        for (int i = 0; i < result_joint_positions.rows(); ++i) {
+        for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
           // simple smoothing
           left_prev_joint_state_msg_.position[i] = left_prev_joint_state_msg_.position[i] * 0.9 +
             result_joint_positions(i) * 0.1;
@@ -306,7 +294,7 @@ void Rx1IkNode::markerLeftCallback(
   }
 }
 
-void Rx1IkNode::rightGripperPoseCallback(const geometry_msgs::msg::Pose & msg)
+void Rx1IkNode::rightGripperPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg)
 {
   // Convert the msg pose to a KDL::Frame
   KDL::Frame desired_pose;
@@ -324,7 +312,7 @@ void Rx1IkNode::rightGripperPoseCallback(const geometry_msgs::msg::Pose & msg)
 
     // if it's within tracking_timeout, then the angle change should be smaller than max_angle_change
     if ((now().seconds() - right_last_ik_time_) < tracking_timeout_) {
-      for (int i = 0; i < result_joint_positions.rows(); ++i) {
+      for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
         if (abs(right_prev_joint_state_msg_.position[i] - result_joint_positions(i)) >
           max_angle_change_)
         {
@@ -335,11 +323,11 @@ void Rx1IkNode::rightGripperPoseCallback(const geometry_msgs::msg::Pose & msg)
 
     if (success) {
       if ((now().seconds() - right_last_ik_time_) < tracking_timeout_) {
-        for (int i = 0; i < result_joint_positions.rows(); ++i) {
+        for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
           right_prev_joint_state_msg_.position[i] = result_joint_positions(i);
         }
       } else {
-        for (int i = 0; i < result_joint_positions.rows(); ++i) {
+        for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
           right_prev_joint_state_msg_.position[i] = result_joint_positions(i);
         }
       }
@@ -355,7 +343,7 @@ void Rx1IkNode::rightGripperPoseCallback(const geometry_msgs::msg::Pose & msg)
   }
 }
 
-void Rx1IkNode::leftGripperPoseCallback(const geometry_msgs::msg::Pose & msg)
+void Rx1IkNode::leftGripperPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg)
 {
   // Convert the msg pose to a KDL::Frame
   KDL::Frame desired_pose;
@@ -369,7 +357,7 @@ void Rx1IkNode::leftGripperPoseCallback(const geometry_msgs::msg::Pose & msg)
 
     // if it's within tracking_timeout, then the angle change should be smaller than max_angle_change
     if ((now().seconds() - left_last_ik_time_) < tracking_timeout_) {
-      for (int i = 0; i < result_joint_positions.rows(); ++i) {
+      for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
         if (abs(left_prev_joint_state_msg_.position[i] - result_joint_positions(i)) >
           max_angle_change_)
         {
@@ -380,11 +368,11 @@ void Rx1IkNode::leftGripperPoseCallback(const geometry_msgs::msg::Pose & msg)
 
     if (success) {
       if ((now().seconds() - left_last_ik_time_) < tracking_timeout_) {
-        for (int i = 0; i < result_joint_positions.rows(); ++i) {
+        for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
           left_prev_joint_state_msg_.position[i] = result_joint_positions(i);
         }
       } else {
-        for (int i = 0; i < result_joint_positions.rows(); ++i) {
+        for (size_t i = 0; i < result_joint_positions.rows(); ++i) {
           left_prev_joint_state_msg_.position[i] = result_joint_positions(i);
         }
       }
@@ -402,7 +390,7 @@ void Rx1IkNode::leftGripperPoseCallback(const geometry_msgs::msg::Pose & msg)
 
 void Rx1IkNode::update()
 {
-  for (int i = 0; i < right_cur_joint_state_msg_.position.size(); i++) {
+  for (size_t i = 0; i < right_cur_joint_state_msg_.position.size(); i++) {
     // simple smoothing
     right_cur_joint_state_msg_.position[i] = right_cur_joint_state_msg_.position[i] * 0.9 +
       right_prev_joint_state_msg_.position[i] * 0.1;
@@ -411,7 +399,7 @@ void Rx1IkNode::update()
   right_cur_joint_state_msg_.header.stamp = now();
   right_joint_state_pub_->publish(right_cur_joint_state_msg_);
 
-  for (int i = 0; i < left_cur_joint_state_msg_.position.size(); i++) {
+  for (size_t i = 0; i < left_cur_joint_state_msg_.position.size(); i++) {
     // simple smoothing
     left_cur_joint_state_msg_.position[i] = left_cur_joint_state_msg_.position[i] * 0.9 +
       left_prev_joint_state_msg_.position[i] * 0.1;
@@ -443,10 +431,11 @@ bool Rx1IkNode::getLinkPose(
   const std::string frame, const std::string link,
   geometry_msgs::msg::PoseStamped & pose)
 {
-  geometry_msgs::TransformStamped transformStamped;
+  geometry_msgs::msg::TransformStamped transformStamped;
+
   try {
     transformStamped = tf_buffer_->lookupTransform(frame, link, tf2::TimePointZero,
-      rclcpp::Duration(3.0));
+      std::chrono::seconds(3));
     pose.header.stamp = now();
     pose.header.frame_id = frame;
     pose.pose.position.x = transformStamped.transform.translation.x;
@@ -462,12 +451,16 @@ bool Rx1IkNode::getLinkPose(
 }
 
 bool Rx1IkNode::getPoseInNewFrame(
-  const geometry_msgs::msg::PoseStamped old_pose,
+  const geometry_msgs::msg::PoseStamped & old_pose,
   const std::string & new_frame,
   geometry_msgs::msg::PoseStamped & new_pose)
 {
   try {
-    new_pose = tf_buffer_->lookupTransform(old_pose, new_frame, rclcpp::Duration(1.0));
+    geometry_msgs::msg::TransformStamped transformStamped;
+    transformStamped = tf_buffer_->lookupTransform(old_pose.header.frame_id, new_frame, tf2::TimePointZero,
+      std::chrono::seconds(1));
+
+    tf2::doTransform(old_pose, new_pose, transformStamped);
   } catch (tf2::TransformException & ex) {
     RCLCPP_WARN(this->get_logger(), "getPoseInNewFrame: %s", ex.what());
     return false;
@@ -476,11 +469,11 @@ bool Rx1IkNode::getPoseInNewFrame(
   return true;
 }
 
-geometry_msgs::TransformStamped Rx1IkNode::poseToTransformStamped(
+geometry_msgs::msg::TransformStamped Rx1IkNode::poseToTransformStamped(
   const geometry_msgs::msg::Pose & pose, const std::string & frame_id,
   const std::string & child_frame_id)
 {
-  geometry_msgs::TransformStamped transformStamped;
+  geometry_msgs::msg::TransformStamped transformStamped;
 
   transformStamped.header.stamp = now();
   transformStamped.header.frame_id = frame_id;

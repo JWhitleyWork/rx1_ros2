@@ -1,8 +1,8 @@
 #ifndef RX1_MOTOR__RX1_MOTOR_HPP_
 #define RX1_MOTOR__RX1_MOTOR_HPP_
 
-#include "feetech_lib/SMS_STS.h"
-#include "feetech_lib/SCSCL.h"
+#include "feetech_lib/SMS_STS.hpp"
+#include "feetech_lib/SCSCL.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>

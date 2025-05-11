@@ -1,7 +1,8 @@
 #include "rx1_motor/rx1_motor.hpp"
 
-#include <cmath>
 #include <cassert>
+#include <cmath>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -44,22 +45,22 @@ Rx1MotorNode::Rx1MotorNode(const rclcpp::NodeOptions & options)
   }
 
   for(int i = 0; i < right_arm_servo_ids_.size(); i++) {
-    u8 id = right_arm_servo_ids_[i];
+    uint8_t id = right_arm_servo_ids_[i];
     sts_servo_.WritePosEx(id, 2048, 200, 20);
   }
 
   for(int i = 0; i < left_arm_servo_ids_.size(); i++) {
-    u8 id = left_arm_servo_ids_[i];
+    uint8_t id = left_arm_servo_ids_[i];
     sts_servo_.WritePosEx(id, 2048, 200, 20);
   }
 
   for(int i = 0; i < torso_servo_ids_.size(); i++) {
-    u8 id = torso_servo_ids_[i];
+    uint8_t id = torso_servo_ids_[i];
     sts_servo_.WritePosEx(id, 2048, 200, 20);
   }
 
   for(int i = 0; i < head_servo_ids_.size(); i++) {
-    u8 id = head_servo_ids_[i];
+    uint8_t id = head_servo_ids_[i];
 
     if (i == 1) {
       //sts_servo_.WritePosEx(id, 1600, 200, 20);
@@ -166,7 +167,7 @@ void Rx1MotorNode::torsoJointStateCallback(const sensor_msgs::msg::JointState::S
       torso_speeds, torso_accs);
 }
 
-std::array<double, 2> Rx1Motor::torsoIk(
+std::array<double, 2> Rx1MotorNode::torsoIk(
   double d, double L1, double h1, double h2, double roll,
   double pitch)
 {
@@ -221,10 +222,10 @@ void Rx1MotorNode::rightGripperCallback(const std_msgs::msg::Float32::SharedPtr 
   double grip_ratio = msg->data;
 
   int length = right_hand_servo_ids_.size();
-  u8 id;
-  s16 pos;
-  u16 speed = static_cast<unsigned short>(HAND_SPEED_ * SPEED_CONST_);
-  u8 acc = static_cast<unsigned char>(HAND_ACC_ * ACC_CONST_);
+  uint8_t id;
+  int16_t pos;
+  uint16_t speed = static_cast<unsigned short>(HAND_SPEED_ * SPEED_CONST_);
+  uint8_t acc = static_cast<unsigned char>(HAND_ACC_ * ACC_CONST_);
 
   for (int i = 0; i < length; i++) {
     id = static_cast<unsigned char>(right_hand_servo_ids_[i]);
@@ -252,10 +253,10 @@ void Rx1MotorNode::leftGripperCallback(const std_msgs::msg::Float32::SharedPtr m
   double grip_ratio = msg->data;
 
   int length = left_hand_servo_ids_.size();
-  u8 id;
-  s16 pos;
-  u16 speed = static_cast<unsigned short>(HAND_SPEED_ * SPEED_CONST_);
-  u8 acc = static_cast<unsigned char>(HAND_ACC_ * ACC_CONST_);
+  uint8_t id;
+  int16_t pos;
+  uint16_t speed = static_cast<unsigned short>(HAND_SPEED_ * SPEED_CONST_);
+  uint8_t acc = static_cast<unsigned char>(HAND_ACC_ * ACC_CONST_);
 
   for (int i = 0; i < length; i++) {
     id = static_cast<unsigned char>(left_hand_servo_ids_[i]);
@@ -283,10 +284,10 @@ void Rx1MotorNode::headMotorCommand(
   const std::vector<double> & joint_accs
 )
 {
-  u8 id;
-  s16 pos;
-  u16 speed;
-  u8 acc;
+  uint8_t id;
+  int16_t pos;
+  uint16_t speed;
+  uint8_t acc;
 
   for (int i = 0; i < joint_positions.size(); i++) {
     id = static_cast<unsigned char>(head_servo_ids_[i]);

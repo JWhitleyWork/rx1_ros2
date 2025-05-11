@@ -1,7 +1,12 @@
-#include "rx1_motor_lib.hpp"
+#include "rx1_motor_lib/rx1_motor_lib.hpp"
 
-#include <cmath>
+#include <array>
 #include <cassert>
+#include <cmath>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace rx1_motor_lib
 {

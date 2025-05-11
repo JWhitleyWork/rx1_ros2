@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(rx1_gazebo)
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
 if(BUILD_TESTING)

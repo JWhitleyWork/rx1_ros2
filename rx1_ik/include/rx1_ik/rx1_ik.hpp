@@ -11,6 +11,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
 
@@ -23,31 +24,28 @@ public:
 
   void initializeInteractiveMarker();
   void markerRightCallback(
-    const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr feedback);
+    visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr feedback);
   void markerLeftCallback(
-    const visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr feedback);
-  void rightGripperPoseCallback(const geometry_msgs::msg::Pose msg);
-  void leftGripperPoseCallback(const geometry_msgs::msg::Pose msg);
+    visualization_msgs::msg::InteractiveMarkerFeedback::ConstSharedPtr feedback);
+  void rightGripperPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg);
+  void leftGripperPoseCallback(const geometry_msgs::msg::Pose::SharedPtr msg);
   void update();
 
 private:
   void make6DofMarker(visualization_msgs::msg::InteractiveMarker & int_marker);
 
-  interactive_markers::msg::InteractiveMarkerServer marker_server_;
+  interactive_markers::InteractiveMarkerServer marker_server_;
   visualization_msgs::msg::InteractiveMarker int_marker_r_;
   visualization_msgs::msg::InteractiveMarker int_marker_l_;
 
-  rclcpp::Subscription<geometry_msgs::Pose>::SharedPtr right_gripper_pose_sub_;
-  rclcpp::Subscription<geometry_msgs::Pose>::SharedPtr left_gripper_pose_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr right_gripper_pose_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr left_gripper_pose_sub_;
 
-  rclcpp::Publisher<sensor_msgs::JointState>::SharedPtr right_joint_state_pub_;
-  rclcpp::Publisher<sensor_msgs::JointState>::SharedPtr left_joint_state_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr right_joint_state_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr left_joint_state_pub_;
 
-  std::unique_ptr<pluginlib::ClassLoader<ik_solver_plugin::IKSolverBase>> ik_loader_r_ptr_;
-  std::shared_ptr<ik_solver_plugin::IKSolverBase> ik_solver_r_ptr_;
-
-  std::unique_ptr<pluginlib::ClassLoader<ik_solver_plugin::IKSolverBase>> ik_loader_l_ptr_;
-  std::shared_ptr<ik_solver_plugin::IKSolverBase> ik_solver_l_ptr_;
+  std::shared_ptr<ik_solver_lib::IKSolverBase> ik_solver_r_ptr_;
+  std::shared_ptr<ik_solver_lib::IKSolverBase> ik_solver_l_ptr_;
 
   sensor_msgs::msg::JointState right_prev_joint_state_msg_;
   sensor_msgs::msg::JointState left_prev_joint_state_msg_;
@@ -78,8 +76,8 @@ private:
     geometry_msgs::msg::PoseStamped & pose);
     // Turn the pose in frame a to frame b
   bool getPoseInNewFrame(
-    const geometry_msgs::msg::PoseStamped old_pose,
-    const std::string new_frame, geometry_msgs::msg::PoseStamped & new_pose);
+    const geometry_msgs::msg::PoseStamped & old_pose,
+    const std::string & new_frame, geometry_msgs::msg::PoseStamped & new_pose);
     // Turn pose to transform
   geometry_msgs::msg::TransformStamped poseToTransformStamped(
     const geometry_msgs::msg::Pose & pose,
