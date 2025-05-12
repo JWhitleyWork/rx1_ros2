@@ -1,4 +1,5 @@
 <?xml version="1.0" ?>
+<?xml-model href="https://raw.githubusercontent.com/ros/urdfdom/master/xsd/urdf.xsd" type="application/xml"?>
 <robot name="rx1" version="1.0">
   <material name="red">
     <color rgba="1.0 0.0 0.0 1.0"/>
